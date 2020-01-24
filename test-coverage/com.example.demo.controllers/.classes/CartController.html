@@ -1,0 +1,160 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html id="htmlId">
+<head>
+  <title>Coverage Report :: CartController</title>
+  <style type="text/css">
+    @import "../../.css/coverage.css";
+  </style>
+</head>
+
+<body>
+<div class="header"></div>
+
+<div class="content">
+<div class="breadCrumbs">
+    [ <a href="../../index.html">all classes</a> ]
+    [ <a href="../index.html">com.example.demo.controllers</a> ]
+</div>
+
+<h1>Coverage Summary for Class: CartController (com.example.demo.controllers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">CartController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/ 1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/ 3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (23/ 23)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<div class="sourceCode"><i>1</i>&nbsp;package com.example.demo.controllers;
+<i>2</i>&nbsp;
+<i>3</i>&nbsp;import java.util.Optional;
+<i>4</i>&nbsp;import java.util.stream.IntStream;
+<i>5</i>&nbsp;
+<i>6</i>&nbsp;import org.slf4j.Logger;
+<i>7</i>&nbsp;import org.slf4j.LoggerFactory;
+<i>8</i>&nbsp;import org.springframework.beans.factory.annotation.Autowired;
+<i>9</i>&nbsp;import org.springframework.http.HttpStatus;
+<i>10</i>&nbsp;import org.springframework.http.ResponseEntity;
+<i>11</i>&nbsp;import org.springframework.web.bind.annotation.PostMapping;
+<i>12</i>&nbsp;import org.springframework.web.bind.annotation.RequestBody;
+<i>13</i>&nbsp;import org.springframework.web.bind.annotation.RequestMapping;
+<i>14</i>&nbsp;import org.springframework.web.bind.annotation.RestController;
+<i>15</i>&nbsp;
+<i>16</i>&nbsp;import com.example.demo.model.persistence.Cart;
+<i>17</i>&nbsp;import com.example.demo.model.persistence.Item;
+<i>18</i>&nbsp;import com.example.demo.model.persistence.User;
+<i>19</i>&nbsp;import com.example.demo.model.persistence.repositories.CartRepository;
+<i>20</i>&nbsp;import com.example.demo.model.persistence.repositories.ItemRepository;
+<i>21</i>&nbsp;import com.example.demo.model.persistence.repositories.UserRepository;
+<i>22</i>&nbsp;import com.example.demo.model.requests.ModifyCartRequest;
+<i>23</i>&nbsp;
+<b class="fc"><i>24</i>&nbsp;@RestController</b>
+<i>25</i>&nbsp;@RequestMapping(&quot;/api/cart&quot;)
+<i>26</i>&nbsp;public class CartController {
+<i>27</i>&nbsp;	private static final Logger logger = LoggerFactory.getLogger(CartController.class);
+<i>28</i>&nbsp;	@Autowired
+<i>29</i>&nbsp;	private UserRepository userRepository;
+<i>30</i>&nbsp;	
+<i>31</i>&nbsp;	@Autowired
+<i>32</i>&nbsp;	private CartRepository cartRepository;
+<i>33</i>&nbsp;	
+<i>34</i>&nbsp;	@Autowired
+<i>35</i>&nbsp;	private ItemRepository itemRepository;
+<i>36</i>&nbsp;	
+<b class="fc"><i>37</i>&nbsp;	@PostMapping(&quot;/addToCart&quot;)</b>
+<b class="fc"><i>38</i>&nbsp;	public ResponseEntity&lt;Cart&gt; addTocart(@RequestBody ModifyCartRequest request) {</b>
+<b class="fc"><i>39</i>&nbsp;		User user = userRepository.findByUsername(request.getUsername());</b>
+<i>40</i>&nbsp;		if(user == null) {
+<b class="fc"><i>41</i>&nbsp;			logger.error(&quot;Add To Cart request failed, username &#39;{}&#39; not found&quot;, request.getUsername());</b>
+<b class="fc"><i>42</i>&nbsp;			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();</b>
+<b class="fc"><i>43</i>&nbsp;		}</b>
+<i>44</i>&nbsp;		Optional&lt;Item&gt; item = itemRepository.findById(request.getItemId());
+<b class="fc"><i>45</i>&nbsp;		if(!item.isPresent()) {</b>
+<b class="fc"><i>46</i>&nbsp;			logger.error(&quot;Add To Cart request failed, item with ID &#39;{}&#39; not found&quot;, request.getItemId());</b>
+<b class="fc"><i>47</i>&nbsp;			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();</b>
+<b class="fc"><i>48</i>&nbsp;		}</b>
+<b class="fc"><i>49</i>&nbsp;		Cart cart = user.getCart();</b>
+<i>50</i>&nbsp;		IntStream.range(0, request.getQuantity())
+<i>51</i>&nbsp;			.forEach(i -&gt; cart.addItem(item.get()));
+<i>52</i>&nbsp;		cartRepository.save(cart);
+<i>53</i>&nbsp;		logger.info(&quot;Item with ID &#39;{}&#39; added to user &#39;{}&#39; cart&quot;, request.getItemId(), request.getUsername());
+<b class="fc"><i>54</i>&nbsp;		return ResponseEntity.ok(cart);</b>
+<b class="fc"><i>55</i>&nbsp;	}</b>
+<b class="fc"><i>56</i>&nbsp;	</b>
+<i>57</i>&nbsp;	@PostMapping(&quot;/removeFromCart&quot;)
+<b class="fc"><i>58</i>&nbsp;	public ResponseEntity&lt;Cart&gt; removeFromcart(@RequestBody ModifyCartRequest request) {</b>
+<b class="fc"><i>59</i>&nbsp;		User user = userRepository.findByUsername(request.getUsername());</b>
+<b class="fc"><i>60</i>&nbsp;		if(user == null) {</b>
+<i>61</i>&nbsp;			logger.error(&quot;Remove From Cart request failed, username &#39;{}&#39; not found&quot;, request.getUsername());
+<b class="fc"><i>62</i>&nbsp;			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();</b>
+<b class="fc"><i>63</i>&nbsp;		}</b>
+<b class="fc"><i>64</i>&nbsp;		Optional&lt;Item&gt; item = itemRepository.findById(request.getItemId());</b>
+<b class="fc"><i>65</i>&nbsp;		if(!item.isPresent()) {</b>
+<b class="fc"><i>66</i>&nbsp;			logger.error(&quot;Remove From Cart request failed, item with ID &#39;{}&#39; not found&quot;, request.getItemId());</b>
+<i>67</i>&nbsp;			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+<i>68</i>&nbsp;		}
+<i>69</i>&nbsp;		Cart cart = user.getCart();
+<i>70</i>&nbsp;		IntStream.range(0, request.getQuantity())
+<i>71</i>&nbsp;			.forEach(i -&gt; cart.removeItem(item.get()));
+<i>72</i>&nbsp;		cartRepository.save(cart);
+<i>73</i>&nbsp;		logger.info(&quot;Item with ID &#39;{}&#39; removed from user &#39;{}&#39; cart&quot;, request.getItemId(), request.getUsername());
+<i>74</i>&nbsp;		return ResponseEntity.ok(cart);
+<i>75</i>&nbsp;	}
+<i>76</i>&nbsp;		
+<i>77</i>&nbsp;}
+</div>
+</div>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2020-01-24 00:04</div>
+</div>
+</body>
+</html>

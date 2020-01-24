@@ -1,0 +1,175 @@
+
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html id="htmlId">
+<head>
+  <title>Coverage Report :: UserController</title>
+  <style type="text/css">
+    @import "../../.css/coverage.css";
+  </style>
+</head>
+
+<body>
+<div class="header"></div>
+
+<div class="content">
+<div class="breadCrumbs">
+    [ <a href="../../index.html">all classes</a> ]
+    [ <a href="../index.html">com.example.demo.controllers</a> ]
+</div>
+
+<h1>Coverage Summary for Class: UserController (com.example.demo.controllers)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">UserController</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/ 1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (7/ 7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (22/ 22)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<div class="sourceCode"><i>1</i>&nbsp;package com.example.demo.controllers;
+<i>2</i>&nbsp;
+<i>3</i>&nbsp;import com.example.demo.model.persistence.Cart;
+<i>4</i>&nbsp;import com.example.demo.model.persistence.User;
+<i>5</i>&nbsp;import com.example.demo.model.persistence.repositories.CartRepository;
+<i>6</i>&nbsp;import com.example.demo.model.persistence.repositories.UserRepository;
+<i>7</i>&nbsp;import com.example.demo.model.requests.CreateUserRequest;
+<i>8</i>&nbsp;import org.slf4j.Logger;
+<i>9</i>&nbsp;import org.slf4j.LoggerFactory;
+<i>10</i>&nbsp;import org.springframework.beans.factory.annotation.Autowired;
+<i>11</i>&nbsp;import org.springframework.http.ResponseEntity;
+<i>12</i>&nbsp;import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+<i>13</i>&nbsp;import org.springframework.web.bind.annotation.*;
+<i>14</i>&nbsp;
+<i>15</i>&nbsp;@RestController
+<i>16</i>&nbsp;@RequestMapping(&quot;/api/user&quot;)
+<b class="fc"><i>17</i>&nbsp;public class UserController {</b>
+<i>18</i>&nbsp;
+<b class="fc"><i>19</i>&nbsp;    private static final Logger logger = LoggerFactory.getLogger(UserController.class);</b>
+<i>20</i>&nbsp;    @Autowired
+<i>21</i>&nbsp;    private UserRepository userRepository;
+<i>22</i>&nbsp;    @Autowired
+<i>23</i>&nbsp;    private CartRepository cartRepository;
+<i>24</i>&nbsp;    @Autowired
+<i>25</i>&nbsp;	private BCryptPasswordEncoder bCryptPasswordEncoder;
+<i>26</i>&nbsp;
+<i>27</i>&nbsp;    @GetMapping(&quot;/id/{id}&quot;)
+<i>28</i>&nbsp;    public ResponseEntity&lt;User&gt; findById(@PathVariable Long id) {
+<b class="fc"><i>29</i>&nbsp;        return ResponseEntity.of(userRepository.findById(id));</b>
+<i>30</i>&nbsp;    }
+<i>31</i>&nbsp;
+<i>32</i>&nbsp;    @GetMapping(&quot;/{username}&quot;)
+<i>33</i>&nbsp;    public ResponseEntity&lt;User&gt; findByUserName(@PathVariable String username) {
+<b class="fc"><i>34</i>&nbsp;        User user = userRepository.findByUsername(username);</b>
+<b class="fc"><i>35</i>&nbsp;        if (user==null) {</b>
+<i>36</i>&nbsp;            logger.error(&quot;Could not find user &#39;{}&#39;&quot;, username);
+<i>37</i>&nbsp;            return ResponseEntity.notFound().build();
+<i>38</i>&nbsp;        }
+<i>39</i>&nbsp;        return ResponseEntity.ok(user);
+<i>40</i>&nbsp;    }
+<b class="fc"><i>41</i>&nbsp;</b>
+<b class="fc"><i>42</i>&nbsp;    @PostMapping(&quot;/create&quot;)</b>
+<i>43</i>&nbsp;    public ResponseEntity&lt;User&gt; createUser(@RequestBody CreateUserRequest createUserRequest) {
+<b class="fc"><i>44</i>&nbsp;        // exit early for bad account creation request</b>
+<i>45</i>&nbsp;        if (!validCreateUserRequest(createUserRequest)) {
+<b class="fc"><i>46</i>&nbsp;            logger.error(</b>
+<i>47</i>&nbsp;                &quot;Invalid CreateUserRequest. Could not create new user with username: {}&quot;,
+<i>48</i>&nbsp;                createUserRequest.getUsername()
+<b class="fc"><i>49</i>&nbsp;            );</b>
+<b class="fc"><i>50</i>&nbsp;            return ResponseEntity.badRequest().build();</b>
+<b class="fc"><i>51</i>&nbsp;        }</b>
+<b class="fc"><i>52</i>&nbsp;</b>
+<b class="fc"><i>53</i>&nbsp;		User user = new User();</b>
+<b class="fc"><i>54</i>&nbsp;		user.setUsername(createUserRequest.getUsername());</b>
+<b class="fc"><i>55</i>&nbsp;		user.setPassword(bCryptPasswordEncoder.encode(createUserRequest.getPassword()));</b>
+<i>56</i>&nbsp;		Cart cart = new Cart();
+<b class="fc"><i>57</i>&nbsp;		cartRepository.save(cart);</b>
+<b class="fc"><i>58</i>&nbsp;		user.setCart(cart);</b>
+<i>59</i>&nbsp;        userRepository.save(user);
+<i>60</i>&nbsp;
+<i>61</i>&nbsp;        logger.info(&quot;Created new user account with username: {}&quot;, user.getUsername());
+<i>62</i>&nbsp;        return ResponseEntity.ok(user);
+<i>63</i>&nbsp;    }
+<i>64</i>&nbsp;
+<i>65</i>&nbsp;    /**
+<i>66</i>&nbsp;     * Validates a CreateUserRequest object for creating a new user account.
+<i>67</i>&nbsp;     * To be valid, the request must pass the following tests:
+<i>68</i>&nbsp;     * 1. The username cannot already exist in our repository.
+<i>69</i>&nbsp;     * 2. The password must meet our password criteria.
+<i>70</i>&nbsp;     * 3. The password and confirmPassword must be equal.
+<i>71</i>&nbsp;     *
+<i>72</i>&nbsp;     * @param createUserRequest An object containing the information for creating
+<b class="fc"><i>73</i>&nbsp;     *                          a new user.</b>
+<b class="fc"><i>74</i>&nbsp;     * @return True if all the above tests pass.</b>
+<b class="fc"><i>75</i>&nbsp;     */</b>
+<i>76</i>&nbsp;    private boolean validCreateUserRequest(CreateUserRequest createUserRequest) {
+<i>77</i>&nbsp;        return validPasswordCriteriaMet(createUserRequest.getPassword())
+<i>78</i>&nbsp;                   &amp;&amp; createUserRequest.getPassword().equals(createUserRequest.getConfirmPassword())
+<i>79</i>&nbsp;                   &amp;&amp; userRepository.findByUsername(createUserRequest.getUsername()) == null;
+<i>80</i>&nbsp;    }
+<i>81</i>&nbsp;
+<i>82</i>&nbsp;    /**
+<i>83</i>&nbsp;     * Confirms user password entry matches our criteria for a valid password.
+<i>84</i>&nbsp;     * Currently, criteria is only at least 7 characters.
+<i>85</i>&nbsp;     *
+<b class="fc"><i>86</i>&nbsp;     * @param password The password entered by the user.</b>
+<i>87</i>&nbsp;     * @return True if password matches our criteria for valid password.
+<i>88</i>&nbsp;     */
+<i>89</i>&nbsp;    private boolean validPasswordCriteriaMet(String password) {
+<i>90</i>&nbsp;        return password.length() &gt;= 7;
+<i>91</i>&nbsp;    }
+<i>92</i>&nbsp;}
+</div>
+</div>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2020-01-24 00:04</div>
+</div>
+</body>
+</html>
